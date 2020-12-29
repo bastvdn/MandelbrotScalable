@@ -1,14 +1,10 @@
-
+import timeit
 import pygame
+import time
 
-if __name__ == '__main__':
-    # Programme : mandelbrot.py
-    # Langage : Python 3.6 - Pygame 1.9
-    # Auteur : Mathieu
-    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
-
+def main():
     # Constantes
-    MAX_ITERATION = 100  # nombre d'itérations maximales avant de considérer que la suite converge
+    MAX_ITERATION = 20  # nombre d'itérations maximales avant de considérer que la suite converge
     XMIN, XMAX, YMIN, YMAX = -2, +0.5, -1.25, +1.25  # bornes du repère
     LARGEUR, HAUTEUR = 700, 700  # taille de la fenêtre en pixels
     # Initialisation et création d'une fenêtre aux dimensions spécifiéés munie d'un titre
@@ -41,6 +37,7 @@ if __name__ == '__main__':
             else:
                 screen.set_at((x, y), (255, 255, 255))  # On colore le pixel en blanc -> code RGB : (255,255,255)
     pygame.display.flip()  # Mise à jour et rafraîchissement de la fenêtre graphique pour affichage
+    print("--- Temps de recherche : %s secondes---" % (time.time() - start_time))
     # Boucle infinie permettant d'afficher à l'écran la fenêtre graphique
     # Sans ça, la fenêtre apparaît et disparaît aussitôt
     loop = True
@@ -51,6 +48,22 @@ if __name__ == '__main__':
 
     pygame.quit()
 
+
+
+if __name__ == '__main__':
+    # Programme : mandelbrot.py
+    # Langage : Python 3.6 - Pygame 1.9
+    # Auteur : Mathieu
+    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
+
+    start_time = time.time()
+    main()
+
+
+
+
+
 #branch
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
