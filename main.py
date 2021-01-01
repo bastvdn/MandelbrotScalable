@@ -99,6 +99,35 @@ def multi(iter = 20):
     print("--- Temps de recherche : %s secondes---" % (time.time() - start_time))
     pyplot.show()
 
+def on_press(key):
+    if key == keyboard.Key.esc:
+        return False  # stop listener
+    try:
+        k = key.char  # single-char keys
+    except:
+        k = key.name  # other keys
+    if k in ['1', '2', 'left', 'right']:  # keys of interest
+        # self.keys.append(k)  # store it in global-like variable
+        print('Key pressed: ' + k)
+
+class ClientThread(threading.Thread):
+    def __init__(self,clientAddress,clientsocket):
+        threading.Thread.__init__(self)
+        self.csocket = clientsocket
+        self.caddress = clientAddress
+        print ("New connection added: ", clientAddress)
+    def run(self):
+        print ("Connection from : ", self.caddress)
+        #self.csocket.send(bytes("Hi, This is from Server..",'utf-8'))
+        msg = ''
+        while True:
+            data = self.csocket.recv(2048)
+            msg = data.decode()
+            if msg=='bye':
+              break
+            print ("from client", msg)
+            self.csocket.send(bytes(msg,'UTF-8'))
+        print ("Client at ", self.caddress , " disconnected...")
 
 def show_server_list():
     powerString = "█"
@@ -106,26 +135,27 @@ def show_server_list():
     i = 0
     while i < len(all_adresses):
 
-        fullString += colored('serveur {} addresse: {} port :{}'.format(i,all_adresses[i][0],str(all_adresses[i][1])),all_color[i], attrs=['reverse'])  + '\n'
+        fullString += colored('serveur {} addresse: {} port :{} puissance :{}'.format(i,all_adresses[i][0],str(all_adresses[i][1]),str(all_power[i])),all_color[i], attrs=['reverse'])  + '\n'
         i += 1
     return fullString
 
 def threaded(c):
 
-    # data received from client
-    print('waiting')
     c.send(str.encode('Server is working:'))
     while True:
-        data = c.recv(1024)
-        if not data:
+        power = c.recv(1024)
+        if not power:
             print('Bye')
 
             # lock released on exit
             print_lock.release()
             break
-        resp = 'Server message: ' + data.decode('utf-8')
-        print('response :' + resp)
-        c.sendall(str.encode(resp))
+
+        resp = power.decode('utf-8')
+        all_power.append(resp)
+        print(show_server_list())
+        res = input('waiting')
+        c.sendall(str.encode(res))
 
     # all_power.append(data)
     # reverse the given string from client
@@ -147,6 +177,8 @@ if __name__ == '__main__':
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()  # start to listen on a separate thread
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -156,24 +188,28 @@ if __name__ == '__main__':
         print(str(e))
     print("Lancement du serveur")
     s.listen(5)
+    try:
+        while True:
+            # establish connection with client
 
-    while True:
-        # establish connection with client
-        print("waiting for new")
-        c, addr = s.accept()
+            c, addr = s.accept()
 
-        # lock acquired by client
-        print_lock.acquire()
-        print('Connected to :', addr[0], ':', addr[1])
-        start_new_thread(threaded, (c,))
+            # lock acquired by client
+            # print_lock.acquire()
+            print('Connected to :', addr[0], ':', addr[1])
+            all_adresses.append(addr)
+            start_new_thread(threaded, (c,))
 
-
-
-        # Start a new thread and return its identifier
+            #listener.join()  # remove if main thread is polling self.keys
 
 
-    s.close()
 
+            # Start a new thread and return its identifier
+
+
+        s.close()
+    except KeyboardInterrupt:
+        pass
 
 
     """

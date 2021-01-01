@@ -18,11 +18,12 @@ if __name__ == '__main__':
     message = get_power()
 
     res = s.recv(1024)
+
     print(res.decode('utf-8'))
     while True:
-        input0 = input('msg')
+        time.sleep(1)
 
-        s.send(str.encode(input0))
+        s.send(str.encode(get_power()))
         print("waiting resp")
         res = s.recv(1024)
         print("received resp :")
