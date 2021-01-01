@@ -9,7 +9,6 @@ from termcolor import colored
 import os
 from _thread import *
 import threading
-from pynput import keyboard
 
 def main(iter = 20):
     # Constantes
@@ -111,30 +110,30 @@ def show_server_list():
     return fullString
 
 def threaded(c):
-
-    # data received from client
-    print('waiting')
-    c.send(str.encode('Server is working:'))
     while True:
+
+        # data received from client
+        print('waiting')
         data = c.recv(1024)
+        print('message received')
+        print(str(data))
+
         if not data:
             print('Bye')
 
             # lock released on exit
             print_lock.release()
             break
-        resp = 'Server message: ' + data.decode('utf-8')
-        print('response :' + resp)
-        c.sendall(str.encode(resp))
 
-    # all_power.append(data)
-    # reverse the given string from client
-    # print(all_power)
-    # print(show_server_list())
 
-    # send back reversed string to client
+        all_power.append(data)
+        # reverse the given string from client
+        print(all_power)
+        print(show_server_list())
 
-    # connection closed
+        # send back reversed string to client
+
+        # connection closed
     c.close()
 
 if __name__ == '__main__':
@@ -149,11 +148,7 @@ if __name__ == '__main__':
 
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    try:
-        s.bind((HOST, PORT))
-    except socket.error as e:
-        print(str(e))
+    s.bind((HOST, PORT))
     print("Lancement du serveur")
     s.listen(5)
 
@@ -166,7 +161,6 @@ if __name__ == '__main__':
         print_lock.acquire()
         print('Connected to :', addr[0], ':', addr[1])
         start_new_thread(threaded, (c,))
-
 
 
         # Start a new thread and return its identifier
