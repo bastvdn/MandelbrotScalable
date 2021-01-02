@@ -1,7 +1,8 @@
+import json
 import timeit
 import pygame
 import time
-from numpy           import linspace, reshape
+from numpy           import linspace, reshape, array, empty, int8
 from matplotlib      import pyplot
 from multiprocessing import Pool
 import socket
@@ -11,7 +12,7 @@ from _thread import *
 import threading
 from pynput import keyboard
 import pickle
-
+import sys
 
 def main(iter = 20):
     # Constantes
@@ -63,7 +64,7 @@ def main(iter = 20):
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
 nx, ny = 1000, 1000  # resolution
-maxiter = 20
+maxiter = 1000
 all_connections = []
 all_adresses = []
 all_power = []
@@ -120,13 +121,14 @@ def calculate_power_repartition():
 
 
 def multi(iter = 20):
-
+    start = time.time()
     maxiter = iter
 
     X = linspace(xmin,xmax,nx) # lists of x and y
     Y = linspace(ymin,ymax,ny) # pixel co-ordinates
 
     #print(calculate_power_repartition())
+    Yloc = Y[0:1000]
 
     # main loops
     p = Pool()
@@ -137,9 +139,11 @@ def multi(iter = 20):
 
     N = p.map(mandelbrot,Z)
 
-    N = reshape(N, (nx,ny)) # change to rectangular array
+    N = reshape(N, (len(Yloc),ny)) # change to rectangular array
 
-    print(N[0])
+    print("Mandelbrot generation ")
+    print(time.time() - start)
+
     pyplot.imshow(N) # plot the image
 
     pyplot.show()
@@ -159,37 +163,39 @@ def on_press(key):
         return False
 
 class ClientThread(threading.Thread):
+    nb = 0
     def __init__(self,clientAddress,clientsocket):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.caddress = clientAddress
-        print ("New connection added: ", clientAddress)
+        self.nb = ClientThread.nb
+        self.part = []
+        ClientThread.nb += 1
+        print ("New connection added: ", clientAddress , str(self.nb))
     def run(self):
-        time.sleep(1)
-        self.csocket.send(str.encode('Server is working:'))
+        time.sleep(0.1)
+        self.csocket.send(str.encode('Server is working:' + str(self.nb)))
         while True:
-            power = self.csocket.recv(1024)
+            power = self.csocket.recv(8192)
             if not power:
                 print('Bye')
-
-
                 break
-
 
             resp = power.decode('utf-8')
             all_adresses.append(addr)
             all_power.append(resp)
             receptionActive = True
-            part = []
+
             while receptionActive:
-                lineP = self.csocket.recv(8192)
+                lineP = self.csocket.recv(16384)
+
                 line = pickle.loads(lineP)
                 if len(line) == 0:
                     receptionActive = False
-                part.append(line)
+                self.part.append(line)
 
             print("all data received")
-            print(part[0][:10])
+
 
 
 
@@ -267,6 +273,23 @@ def send_data_repartition():
 
     return 0
 
+
+def display_img():
+    start = time.time()
+
+    for client in all_connections:
+        N = client.part
+
+    print("displaying img ")
+    print(time.time() - start)
+
+    print(N[0])
+    pyplot.imshow(N)  # plot the image
+
+    pyplot.show()
+
+
+
 if __name__ == '__main__':
     # Programme : mandelbrot.py
     # Langage : Python 3.6 - Pygame 1.9
@@ -284,7 +307,7 @@ if __name__ == '__main__':
     listener.start()  # start to listen on a separate thread
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
+    s.settimeout(2)
 
     try:
         s.bind((HOST, PORT))
@@ -322,6 +345,8 @@ if __name__ == '__main__':
         send_data_repartition()
 
         input()
+
+        display_img()
 
 
         s.close()

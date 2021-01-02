@@ -1,32 +1,34 @@
 import socket
 import time
-from numpy           import linspace, reshape
-from matplotlib      import pyplot
+from numpy import linspace, reshape
+from matplotlib import pyplot
 from multiprocessing import Pool
 import pickle
+import sys
 
-maxiter = 20
+maxiter = 30
 
 
 def get_power():
     return "10"
 
 
-
 def mandelbrot(z):
-    c=z
+    c = z
     global maxiter
     for n in range(maxiter):
-        if abs(z)>2:
+        if abs(z) > 2:
             return n
-        z=z*z+c
+        z = z * z + c
     return maxiter
 
+
 def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
+    start = time.time()
     X = linspace(xmin, xmax, nx)  # lists of x and y
     Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
 
-    Yloc = Y[part[0]:part[1]+1]
+    Yloc = Y[part[0]:part[1] + 1]
 
     # main loops
     p = Pool()
@@ -34,22 +36,39 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
     N = p.map(mandelbrot, Z)
 
     N = reshape(N, (len(Yloc), nx))  # change to rectangular array
-
+    print("Mandelbrot generation " + str(part[0]) + "to" + str(part[1]))
+    print(time.time()-start)
     return N
 
-def sendData(mandelList, range):
-    i= 0
-    rangeTot = range[1]-range[0]
+def sendData0(mandelList):
+    start = time.time()
+    mandelPickle = pickle.dumps(mandelList)
+    s.send(mandelPickle)
+    s.close()
+    print("Data sent ")
+    print(time.time() - start)
+
+
+
+def sendData(mandelList, range0):
+    i = 0
+    start = time.time()
+    rangeTot = range0[1] - range0[0]
     for line in mandelList:
-        if i == rangeTot-1:
-            print(i)
+        if i == rangeTot - 1:
             linePickle = pickle.dumps([])
             s.send(linePickle)
             break
+
+
         linePickle = pickle.dumps(line)
         s.send(linePickle)
-        time.sleep(0.01)
-        i+=1
+        time.sleep(0.001)
+
+        i += 1
+    print(mandelList[0])
+    print("Data sent ")
+    print(time.time() - start)
 
 
 if __name__ == '__main__':
@@ -58,9 +77,8 @@ if __name__ == '__main__':
     # Auteur : Mathieu
     # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
 
-    #mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
-    #sendData(mand)
-
+    # mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
+    # sendData(mand)
 
     HOST = '127.0.0.1'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
@@ -73,30 +91,21 @@ if __name__ == '__main__':
     print(res.decode('utf-8'))
 
     s.send(str.encode(get_power()))
-    
+
     print("waiting for dimensions")
     res = s.recv(1024)
     lst = pickle.loads(res)
-    
-    range = lst[0]
-    nx,ny = lst[1]
+
+    range0 = lst[0]
+    nx, ny = lst[1]
     xmin, xmax = lst[2]
     ymin, ymax = lst[3]
     maxiter = lst[4]
 
-    mandelList = mandel(xmin,xmax,ymin,ymax,nx,ny,maxiter,range)
-
+    mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, range0)
     print("sending data")
-    sendData(mandelList,range)
-
-
-
-
-
-
-
-
-
+    sendData(mandelList, range0)
+    #sendData0(mandelList)
 
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -104,4 +113,3 @@ if __name__ == '__main__':
         s.sendall(b'Hello, world')
         data = s.recv(1024)
     """
-
