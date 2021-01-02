@@ -10,6 +10,8 @@ import os
 from _thread import *
 import threading
 from pynput import keyboard
+import pickle
+
 
 def main(iter = 20):
     # Constantes
@@ -82,23 +84,67 @@ def mandelbrot(z):
         z=z*z+c
     return maxiter
 
+def calculate_power_repartition():
+
+    totalSize = ny
+    powerList= []
+    relativeList = []
+
+    i = 0
+    j = 0
+    powerSum = 0
+
+
+    while i < len(all_power):
+
+        powerSum += int(all_power[i])
+        i += 1
+
+    lastTrack = 0
+
+    while j < len(all_power):
+
+        relativeSize = int(all_power[j])/powerSum
+        relativeList.append(relativeSize)
+        part = relativeSize*totalSize
+
+        x=lastTrack
+        y=int(lastTrack+part)
+        lastTrack = y
+
+        powerList.append([x,y])
+        j += 1
+
+    powerList[-1][1] = totalSize
+    return powerList
+
+
 def multi(iter = 20):
 
     maxiter = iter
-    print(maxiter)
-    time.sleep(2)
+
     X = linspace(xmin,xmax,nx) # lists of x and y
     Y = linspace(ymin,ymax,ny) # pixel co-ordinates
 
+    #print(calculate_power_repartition())
+
     # main loops
     p = Pool()
+    start = time.time()
     Z = [complex(x,y) for y in Y for x in X]
+    print(Z[600000:600010])
+    print(time.time()-start)
+
+    print(len(Z))
+
+
+
     N = p.map(mandelbrot,Z)
 
     N = reshape(N, (nx,ny)) # change to rectangular array
 
     pyplot.imshow(N) # plot the image
-    print("--- Temps de recherche : %s secondes---" % (time.time() - start_time))
+
     pyplot.show()
 
 def on_press(key):
@@ -110,7 +156,7 @@ def on_press(key):
         k = key.name  # other keys
     if k in ['1', '2', 'left', 'right']:  # keys of interest
         # self.keys.append(k)  # store it in global-like variable
-        print('Key pressed: ' + k)
+        print('connection phase ended')
         global connectionPhase
         connectionPhase = False
         return False
@@ -122,25 +168,25 @@ class ClientThread(threading.Thread):
         self.caddress = clientAddress
         print ("New connection added: ", clientAddress)
     def run(self):
+        time.sleep(1)
         self.csocket.send(str.encode('Server is working:'))
         while True:
             power = self.csocket.recv(1024)
             if not power:
                 print('Bye')
 
-                # lock released on exit
-                print_lock.release()
+
                 break
 
 
             resp = power.decode('utf-8')
             all_adresses.append(addr)
             all_power.append(resp)
-            break
+
 
 
 def show_server_list():
-    powerString = "█"
+
     fullString = ""
     i = 0
     while i < len(all_adresses):
@@ -176,13 +222,38 @@ def threaded(c):
     # connection closed
     c.close()
 """
+
+
+
+
+
 def show_power_repartition():
-    return 'ok'
-    pass
+    powericn = "█"
+    powerString = ""
+    i=0
+    j=0
+    powerSum = 0
+    while i < len(all_power):
+        powerSum += int(all_power[i])
+        i +=1
+
+    while j < len(all_power):
+        powerString += colored(powericn*int((int(all_power[j])/powerSum)*60),all_color[j])
+        j +=1
+
+    return powerString
+
 
 def send_data_repartition():
+    lst = calculate_power_repartition()
+    i=0
+
     for client in all_connections:
-        client.csocket.send(str.encode('salut'))
+        data = pickle.dumps([lst[i],[nx,ny],[xmin,xmax],[ymin,ymax],maxiter])
+        #client.csocket.send(data)
+        client.csocket.send(data)
+        i+=1
+
     return 0
 
 if __name__ == '__main__':
@@ -192,6 +263,9 @@ if __name__ == '__main__':
     # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
     os.system('color')
 
+    #multi()
+
+
     HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
@@ -199,7 +273,7 @@ if __name__ == '__main__':
     listener.start()  # start to listen on a separate thread
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(5)
+    s.settimeout(1)
 
     try:
         s.bind((HOST, PORT))
@@ -215,6 +289,7 @@ if __name__ == '__main__':
             os.system('cls')
             print("Waiting for connections")
             print(show_server_list())
+            print('{: ^60}'.format("↓↓work charges repartition↓↓"))
             print(show_power_repartition())
             try:
                 c, addr = s.accept()
@@ -224,26 +299,25 @@ if __name__ == '__main__':
                 newThread.start()
                 all_connections.append(newThread)
                 print('Connected to :', addr[0], ':', addr[1])
-                time.sleep(0.1)
+
             except socket.timeout as e:
                 if not connectionPhase:
                     break
                 else:
                     pass
-
             # Start a new thread and return its identifier
-        print("connection phase ended")
-        time.sleep(3)
-        print("sending data repartition")
-        send_data_repartition()
-        input('stop program?')
 
+        input("sending data repartition ?")
+        send_data_repartition()
 
 
         s.close()
+        print('end')
         
     except KeyboardInterrupt:
         pass
+
+
 
 
     """
