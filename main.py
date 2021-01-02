@@ -65,6 +65,8 @@ maxiter = 20
 all_connections = []
 all_adresses = []
 all_power = []
+connectionPhase = True
+
 
 all_color = ['blue','red','green','yellow']
 
@@ -109,6 +111,9 @@ def on_press(key):
     if k in ['1', '2', 'left', 'right']:  # keys of interest
         # self.keys.append(k)  # store it in global-like variable
         print('Key pressed: ' + k)
+        global connectionPhase
+        connectionPhase = False
+        return False
 
 class ClientThread(threading.Thread):
     def __init__(self,clientAddress,clientsocket):
@@ -117,28 +122,32 @@ class ClientThread(threading.Thread):
         self.caddress = clientAddress
         print ("New connection added: ", clientAddress)
     def run(self):
-        print ("Connection from : ", self.caddress)
-        #self.csocket.send(bytes("Hi, This is from Server..",'utf-8'))
-        msg = ''
+        self.csocket.send(str.encode('Server is working:'))
         while True:
-            data = self.csocket.recv(2048)
-            msg = data.decode()
-            if msg=='bye':
-              break
-            print ("from client", msg)
-            self.csocket.send(bytes(msg,'UTF-8'))
-        print ("Client at ", self.caddress , " disconnected...")
+            power = self.csocket.recv(1024)
+            if not power:
+                print('Bye')
+
+                # lock released on exit
+                print_lock.release()
+                break
+
+
+            resp = power.decode('utf-8')
+            all_adresses.append(addr)
+            all_power.append(resp)
+            break
+
 
 def show_server_list():
     powerString = "█"
     fullString = ""
     i = 0
     while i < len(all_adresses):
-
         fullString += colored('serveur {} addresse: {} port :{} puissance :{}'.format(i,all_adresses[i][0],str(all_adresses[i][1]),str(all_power[i])),all_color[i], attrs=['reverse'])  + '\n'
         i += 1
     return fullString
-
+"""
 def threaded(c):
 
     c.send(str.encode('Server is working:'))
@@ -153,7 +162,7 @@ def threaded(c):
 
         resp = power.decode('utf-8')
         all_power.append(resp)
-        print(show_server_list())
+
         res = input('waiting')
         c.sendall(str.encode(res))
 
@@ -166,6 +175,15 @@ def threaded(c):
 
     # connection closed
     c.close()
+"""
+def show_power_repartition():
+    return 'ok'
+    pass
+
+def send_data_repartition():
+    for client in all_connections:
+        client.csocket.send(str.encode('salut'))
+    return 0
 
 if __name__ == '__main__':
     # Programme : mandelbrot.py
@@ -181,33 +199,49 @@ if __name__ == '__main__':
     listener.start()  # start to listen on a separate thread
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5)
 
     try:
         s.bind((HOST, PORT))
     except socket.error as e:
         print(str(e))
     print("Lancement du serveur")
-    s.listen(5)
+
     try:
-        while True:
+        while connectionPhase:
+            s.listen(5)
             # establish connection with client
 
-            c, addr = s.accept()
-
-            # lock acquired by client
-            # print_lock.acquire()
-            print('Connected to :', addr[0], ':', addr[1])
-            all_adresses.append(addr)
-            start_new_thread(threaded, (c,))
-
-            #listener.join()  # remove if main thread is polling self.keys
+            os.system('cls')
+            print("Waiting for connections")
+            print(show_server_list())
+            print(show_power_repartition())
+            try:
+                c, addr = s.accept()
 
 
+                newThread = ClientThread(addr, c)
+                newThread.start()
+                all_connections.append(newThread)
+                print('Connected to :', addr[0], ':', addr[1])
+                time.sleep(0.1)
+            except socket.timeout as e:
+                if not connectionPhase:
+                    break
+                else:
+                    pass
 
             # Start a new thread and return its identifier
+        print("connection phase ended")
+        time.sleep(3)
+        print("sending data repartition")
+        send_data_repartition()
+        input('stop program?')
+
 
 
         s.close()
+        
     except KeyboardInterrupt:
         pass
 

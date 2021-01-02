@@ -21,8 +21,6 @@ if __name__ == '__main__':
 
     print(res.decode('utf-8'))
     while True:
-        time.sleep(1)
-
         s.send(str.encode(get_power()))
         print("waiting resp")
         res = s.recv(1024)
