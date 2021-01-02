@@ -5,12 +5,23 @@ from matplotlib import pyplot
 from multiprocessing import Pool
 import pickle
 import sys
+import urllib.request
+import requests
+from psutil import cpu_count, cpu_freq
+
 
 maxiter = 30
 
 
 def get_power():
-    return "10"
+    ratio = 1
+
+    if len(sys.argv) > 1:
+        ratio = sys.argv[1]/100
+
+    cpu_frequency = cpu_freq()
+
+    return int(cpu_count() * ratio * cpu_frequency.max/1000)
 
 
 def mandelbrot(z):
@@ -53,6 +64,7 @@ def sendData0(mandelList):
 def sendData(mandelList, range0):
     i = 0
     start = time.time()
+    '''
     rangeTot = range0[1] - range0[0]
     for line in mandelList:
         if i == rangeTot - 1:
@@ -67,6 +79,10 @@ def sendData(mandelList, range0):
 
         i += 1
     print(mandelList[0])
+    
+    '''
+    file = pickle.dumps(mandelList)
+    s.send(file)
     print("Data sent ")
     print(time.time() - start)
 
@@ -90,7 +106,7 @@ if __name__ == '__main__':
     res = s.recv(1024)
     print(res.decode('utf-8'))
 
-    s.send(str.encode(get_power()))
+    s.send(str.encode(str(get_power())))
 
     print("waiting for dimensions")
     res = s.recv(1024)

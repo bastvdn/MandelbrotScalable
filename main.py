@@ -108,7 +108,6 @@ def calculate_power_repartition():
         relativeSize = int(all_power[j])/powerSum
         relativeList.append(relativeSize)
         part = relativeSize*totalSize
-
         x=lastTrack
         y=int(lastTrack+part)
         lastTrack = y
@@ -164,12 +163,13 @@ def on_press(key):
 
 class ClientThread(threading.Thread):
     nb = 0
+    img = empty((nx,ny))
     def __init__(self,clientAddress,clientsocket):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.caddress = clientAddress
         self.nb = ClientThread.nb
-        self.part = []
+        self.pic = b""
         ClientThread.nb += 1
         print ("New connection added: ", clientAddress , str(self.nb))
     def run(self):
@@ -181,20 +181,30 @@ class ClientThread(threading.Thread):
                 print('Bye')
                 break
 
-            resp = power.decode('utf-8')
             all_adresses.append(addr)
-            all_power.append(resp)
+            all_power.append(power)
             receptionActive = True
-
+            '''
             while receptionActive:
                 lineP = self.csocket.recv(16384)
-
+                
                 line = pickle.loads(lineP)
                 if len(line) == 0:
                     receptionActive = False
                 self.part.append(line)
+            '''
 
+            while receptionActive:
+                lineP = self.csocket.recv(8192)
+                self.pic = lineP
+                if len(lineP) < 4096:
+                    break
+            print(self.pic)
+
+            #data = pickle.loads(b"".join(data))
+            #self.pic = data
             print("all data received")
+
 
 
 
@@ -275,6 +285,7 @@ def send_data_repartition():
 
 
 def display_img():
+    """
     start = time.time()
 
     for client in all_connections:
@@ -288,6 +299,26 @@ def display_img():
 
     pyplot.show()
 
+    :return:
+    """
+    start = time.time()
+    pic = b""
+    i = 0
+    data = []
+    for client in all_connections:
+        if client.nb == i:
+            pic += client.pic
+            i+=1
+    print(pic)
+
+    data = pickle.loads(pic)
+
+    pyplot.imshow(data)  # plot the image
+
+    pyplot.show()
+    print("displaying img ")
+    print(time.time() - start)
+
 
 
 if __name__ == '__main__':
@@ -300,7 +331,7 @@ if __name__ == '__main__':
     #multi()
 
 
-    HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
+    HOST = ''  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
     listener = keyboard.Listener(on_press=on_press)
