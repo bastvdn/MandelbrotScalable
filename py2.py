@@ -35,10 +35,22 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
 
     N = reshape(N, (len(Yloc), nx))  # change to rectangular array
 
-    pyplot.imshow(N)  # plot the image
-
-    pyplot.show()
     return N
+
+def sendData(mandelList, range):
+    i= 0
+    rangeTot = range[1]-range[0]
+    for line in mandelList:
+        if i == rangeTot-1:
+            print(i)
+            linePickle = pickle.dumps([])
+            s.send(linePickle)
+            break
+        linePickle = pickle.dumps(line)
+        s.send(linePickle)
+        time.sleep(0.01)
+        i+=1
+
 
 if __name__ == '__main__':
     # Programme : mandelbrot.py
@@ -46,7 +58,9 @@ if __name__ == '__main__':
     # Auteur : Mathieu
     # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
 
-    #mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
+    #mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
+    #sendData(mand)
+
 
     HOST = '127.0.0.1'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
@@ -70,7 +84,12 @@ if __name__ == '__main__':
     ymin, ymax = lst[3]
     maxiter = lst[4]
 
-    mandel(xmin,xmax,ymin,ymax,nx,ny,maxiter,range)
+    mandelList = mandel(xmin,xmax,ymin,ymax,nx,ny,maxiter,range)
+
+    print("sending data")
+    sendData(mandelList,range)
+
+
 
 
 

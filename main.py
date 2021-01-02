@@ -130,12 +130,8 @@ def multi(iter = 20):
 
     # main loops
     p = Pool()
-    start = time.time()
     Z = [complex(x,y) for y in Y for x in X]
-    print(Z[600000:600010])
-    print(time.time()-start)
 
-    print(len(Z))
 
 
 
@@ -143,6 +139,7 @@ def multi(iter = 20):
 
     N = reshape(N, (nx,ny)) # change to rectangular array
 
+    print(N[0])
     pyplot.imshow(N) # plot the image
 
     pyplot.show()
@@ -182,6 +179,20 @@ class ClientThread(threading.Thread):
             resp = power.decode('utf-8')
             all_adresses.append(addr)
             all_power.append(resp)
+            receptionActive = True
+            part = []
+            while receptionActive:
+                lineP = self.csocket.recv(8192)
+                line = pickle.loads(lineP)
+                if len(line) == 0:
+                    receptionActive = False
+                part.append(line)
+
+            print("all data received")
+            print(part[0][:10])
+
+
+
 
 
 
@@ -309,6 +320,8 @@ if __name__ == '__main__':
 
         input("sending data repartition ?")
         send_data_repartition()
+
+        input()
 
 
         s.close()
