@@ -4,8 +4,8 @@ import pygame
 import time
 from numpy import linspace, reshape, array, empty, int8
 from matplotlib import pyplot
-from numpy           import linspace, reshape, array, empty, int8, concatenate
-from matplotlib      import pyplot
+from numpy import linspace, reshape, array, empty, int8, concatenate
+from matplotlib import pyplot
 from multiprocessing import Pool
 import socket
 from termcolor import colored
@@ -240,7 +240,6 @@ def display_img():
     :return:
     """
 
-
     start = time.time()
     pic = b""
 
@@ -250,14 +249,10 @@ def display_img():
         if client.nb == i:
             pic += client.pic
 
-    print(pic)
+        pyplot.imshow(all_connections[i].im)  # plot the image
 
-    data = pickle.loads(pic)
-    pyplot.imshow(all_connections[i].im)  # plot the image
-
-    pyplot.show()
-    data = concatenate((data,all_connections[i].im), axis=0)
-
+        pyplot.show()
+        data = concatenate((data, all_connections[i].im), axis=0)
 
     pyplot.imshow(data)  # plot the image
 
