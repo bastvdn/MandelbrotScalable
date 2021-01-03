@@ -4,6 +4,8 @@ import pygame
 import time
 from numpy import linspace, reshape, array, empty, int8
 from matplotlib import pyplot
+from numpy           import linspace, reshape, array, empty, int8, concatenate
+from matplotlib      import pyplot
 from multiprocessing import Pool
 import socket
 from termcolor import colored
@@ -13,56 +15,6 @@ import threading
 from pynput import keyboard
 import pickle
 import sys
-
-
-def main(iter=20):
-    # Constantes
-    MAX_ITERATION = iter  # nombre d'itérations maximales avant de considérer que la suite converge
-    XMIN, XMAX, YMIN, YMAX = -2, +0.5, -1.25, +1.25  # bornes du repère
-    LARGEUR, HAUTEUR = 1000, 1000  # taille de la fenêtre en pixels
-    # Initialisation et création d'une fenêtre aux dimensions spécifiéés munie d'un titre
-    pygame.init()
-    screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
-    pygame.display.set_caption("Fractale de Mandelbrot")
-    # Création de l'ensemble de Mandelbrot
-    # Principe : on balaye l'écran pixel par pixel en convertissant le pixel en un point du plan de notre repère
-    # Si la suite converge, le point appartient à l'ensemble de Mandelbrot et on colore le pixel en noir
-    # Sinon la suite diverge, le point n'appartient pas à l'ensemble et on colore le pixel en blanc
-    for y in range(HAUTEUR):
-        for x in range(LARGEUR):
-            # Les deux lignes suivantes permettent d'associer à chaque pixel de l'écran de coordonnées (x;y)
-            # un point C du plan de coordonnées (cx;cy) dans le repère défini par XMIN:XMAX et YMIN:YMAX
-            cx = (x * (XMAX - XMIN) / LARGEUR + XMIN)
-            cy = (y * (YMIN - YMAX) / HAUTEUR + YMAX)
-            xn = 0
-            yn = 0
-            n = 0
-            while (
-                    xn * xn + yn * yn) < 4 and n < MAX_ITERATION:  # on teste que le carré de la distance est inférieur à 4 -> permet d'économiser un calcul de racine carrée coûteux en terme de performances
-                # Calcul des coordonnes de Mn
-                tmp_x = xn
-                tmp_y = yn
-                xn = tmp_x * tmp_x - tmp_y * tmp_y + cx
-                yn = 2 * tmp_x * tmp_y + cy
-                n = n + 1
-            if n == MAX_ITERATION:
-                screen.set_at((x, y), (0, 0, 0))  # On colore le pixel en noir -> code RGB : (0,0,0)
-            else:
-                screen.set_at((x, y), (255, 255, 255))  # On colore le pixel en blanc -> code RGB : (255,255,255)
-    pygame.display.flip()  # Mise à jour et rafraîchissement de la fenêtre graphique pour affichage
-    print("--- Temps de recherche : %s secondes---" % (time.time() - start_time))
-    # Boucle infinie permettant d'afficher à l'écran la fenêtre graphique
-    # Sans ça, la fenêtre apparaît et disparaît aussitôt
-    loop = True
-    while loop:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:  # Pour quitter l'application en fermant la fenêtre
-                loop = False
-
-    pygame.quit()
-
-    # max iterations
-
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
@@ -159,6 +111,7 @@ class ClientThread(threading.Thread):
         self.caddress = clientAddress
         self.nb = ClientThread.nb
         self.pic = b""
+        self.im = []
         ClientThread.nb += 1
         print("New connection added: ", clientAddress, str(self.nb))
 
@@ -183,16 +136,28 @@ class ClientThread(threading.Thread):
                     receptionActive = False
                 self.part.append(line)
             '''
-
+            data = []
+            data0 = b""
             while receptionActive:
-                lineP = self.csocket.recv(8192)
-                self.pic = lineP
-                if len(lineP) < 4096:
+                lineP = self.csocket.recv(16384)
+                data.append(lineP)
+                data0 += lineP
+                if self.nb == 1:
+                    print("-------------------data2-----------")
+
+                    print(len(lineP))
+                if self.nb == 0:
+                    print("-------------------data1-----------")
+                    print(len(lineP))
+
+                if len(lineP) < 16384:
                     break
-            print(self.pic)
 
             # data = pickle.loads(b"".join(data))
             # self.pic = data
+            data_arr = pickle.loads(data0)
+            data = pickle.loads(b"".join(data))
+            self.im = data_arr
             print("all data received")
 
 
@@ -274,16 +239,29 @@ def display_img():
 
     :return:
     """
+
+
     start = time.time()
     pic = b""
 
     for i, client in enumerate(all_connections):
+
+    i = 0
+    data = array([[0 for n in range(1000)]])
+    for client in all_connections:
+        print(i)
         if client.nb == i:
             pic += client.pic
 
     print(pic)
 
     data = pickle.loads(pic)
+            pyplot.imshow(all_connections[i].im)  # plot the image
+
+            pyplot.show()
+            data = concatenate((data,all_connections[i].im), axis=0)
+
+            i+=1
 
     pyplot.imshow(data)  # plot the image
 
