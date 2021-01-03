@@ -248,13 +248,11 @@ def show_power_repartition():
 
 def send_data_repartition():
     lst = calculate_power_repartition()
-    i = 0
 
-    for client in all_connections:
+    for i, client in enumerate(all_connections):
         data = pickle.dumps([lst[i], [nx, ny], [xmin, xmax], [ymin, ymax], maxiter])
         # client.csocket.send(data)
         client.csocket.send(data)
-        i += 1
 
     return 0
 
@@ -278,12 +276,11 @@ def display_img():
     """
     start = time.time()
     pic = b""
-    i = 0
-    data = []
-    for client in all_connections:
+
+    for i, client in enumerate(all_connections):
         if client.nb == i:
             pic += client.pic
-            i += 1
+
     print(pic)
 
     data = pickle.loads(pic)
