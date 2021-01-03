@@ -1,18 +1,12 @@
 import socket
 import time
 from numpy import linspace, reshape
-from matplotlib import pyplot
 from multiprocessing import Pool
 import pickle
 import sys
-import urllib.request
-import requests
 from psutil import cpu_count, cpu_freq
 
-
-
 maxiter = 30
-
 
 def get_power():
     ratio = 1
@@ -35,11 +29,11 @@ def mandelbrot(z):
     return maxiter
 
 
-def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
+def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
     start = time.time()
     X = linspace(xmin, xmax, nx)  # lists of x and y
     Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-
+    print(part[0])
     Yloc = Y[part[0]:part[1] + 1]
 
     # main loops
@@ -52,18 +46,7 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
     print(time.time()-start)
     return N
 
-def sendData0(mandelList):
-    start = time.time()
-    mandelPickle = pickle.dumps(mandelList)
-    s.send(mandelPickle)
-    s.close()
-    print("Data sent ")
-    print(time.time() - start)
-
-
-
-def sendData(mandelList, range0):
-    i = 0
+def sendData(mandelList):
     start = time.time()
     file = pickle.dumps(mandelList)
     s.send(file)
@@ -96,13 +79,13 @@ if __name__ == '__main__':
     res = s.recv(1024)
     lst = pickle.loads(res)
 
-    range0 = lst[0]
+    part = lst[0]
     nx, ny = lst[1]
     xmin, xmax = lst[2]
     ymin, ymax = lst[3]
     maxiter = lst[4]
+    print("Dimension received, we handle computation !")
 
-    mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, range0)
+    mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, part)
     print("sending data")
-    sendData(mandelList, range0)
-    #sendData0(mandelList)
+    sendData(mandelList)

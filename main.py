@@ -9,10 +9,11 @@ import threading
 from pynput import keyboard
 import pickle
 
+from py2 import maxiter
+
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
-nx, ny = 10000, 10000  # resolution
-maxiter = 1000
+nx, ny = 1000, 1000  # resolution
 all_connections = []
 all_adresses = []
 all_power = []
@@ -36,7 +37,6 @@ def mandelbrot(z):
 def calculate_power_repartition():
     totalSize = ny
     powerList = []
-
     powerSum = sum(all_power)
     lastTrack = 0
 
@@ -106,7 +106,6 @@ class ClientThread(threading.Thread):
         self.pic = b""
         self.im = []
         ClientThread.nb += 1
-        print("New connection added: ", clientAddress, str(self.nb))
 
     def run(self):
         time.sleep(0.1)
@@ -126,35 +125,21 @@ class ClientThread(threading.Thread):
                 lineP = self.csocket.recv(16384)
                 data.append(lineP)
                 data0 += lineP
-                if self.nb == 1:
-                    print("-------------------data2-----------")
-
-                    print(len(lineP))
-                if self.nb == 0:
-                    print("-------------------data1-----------")
-                    print(len(lineP))
 
                 if len(lineP) < 16384:
                     break
 
-            # data = pickle.loads(b"".join(data))
-            # self.pic = data
             data_arr = pickle.loads(data0)
-            data = pickle.loads(b"".join(data))
             self.im = data_arr
             print("all data received")
 
 
 def show_server_list():
-    fullString = ""
-    i = 0
-    while i < len(all_adresses):
-        fullString += colored(
-            'serveur {} addresse: {} port :{} puissance :{}'.format(i, all_adresses[i][0], str(all_adresses[i][1]),
-                                                                    str(all_power[i])), all_color[i],
-            attrs=['reverse']) + '\n'
-        i += 1
-    return fullString
+
+    return '\n'.join([colored(
+        'serveur {} addresse: {} port :{} puissance :{}'.format(i, elem[0], str(elem[1]),
+                                                                str(all_power[i])), all_color[i],
+        attrs=['reverse']) for i, elem in enumerate(all_adresses)])
 
 
 def show_power_repartition():
