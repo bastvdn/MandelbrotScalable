@@ -41,7 +41,7 @@ def calculate_power_repartition():
     lastTrack = 0
 
     for power in all_power:
-        relativeSize = int(power) / powerSum
+        relativeSize = power / powerSum
         part = relativeSize * totalSize
         x = lastTrack
         y = int(lastTrack + part)
@@ -118,7 +118,7 @@ def show_server_list():
 def show_power_repartition():
     powerSum = sum(all_power)
 
-    return ''.join([colored("█" * int((int(power) / powerSum) * 60), all_color[i])
+    return ''.join([colored("█" * int((power / powerSum) * 60), all_color[i])
                     for i, power in enumerate(all_power)])
 
 
