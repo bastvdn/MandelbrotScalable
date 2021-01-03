@@ -1,18 +1,12 @@
 import socket
 import time
 from numpy import linspace, reshape
-from matplotlib import pyplot
 from multiprocessing import Pool
 import pickle
 import sys
-import urllib.request
-import requests
 from psutil import cpu_count, cpu_freq
 
-
-
 maxiter = 30
-
 
 def get_power():
     ratio = 1
@@ -35,11 +29,10 @@ def mandelbrot(z):
     return maxiter
 
 
-def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
+def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
     start = time.time()
     X = linspace(xmin, xmax, nx)  # lists of x and y
     Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-
     Yloc = Y[part[0]:part[1] + 1]
 
     # main loops
@@ -52,29 +45,22 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, part):
     print(time.time()-start)
     return N
 
-def sendData0(mandelList):
-    start = time.time()
-    mandelPickle = pickle.dumps(mandelList)
-    s.send(mandelPickle)
-    s.close()
-    print("Data sent ")
-    print(time.time() - start)
-
-
-
-def sendData(mandelList, range0):
-
+def sendData(mandelList):
     start = time.time()
     file = pickle.dumps(mandelList)
-    print(sys.getsizeof(file))
-    time.sleep(1)
     s.send(file)
     print("Data sent ")
     print(time.time() - start)
 
 
 if __name__ == '__main__':
+    # Programme : mandelbrot.py
+    # Langage : Python 3.6 - Pygame 1.9
+    # Auteur : Mathieu
+    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
 
+    # mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
+    # sendData(mand)
 
     HOST = '127.0.0.1'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
@@ -92,13 +78,13 @@ if __name__ == '__main__':
     res = s.recv(1024)
     lst = pickle.loads(res)
 
-    range0 = lst[0]
+    part = lst[0]
     nx, ny = lst[1]
     xmin, xmax = lst[2]
     ymin, ymax = lst[3]
     maxiter = lst[4]
+    print("Dimension received, we handle computation !")
 
-    mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, range0)
+    mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, part)
     print("sending data")
-    sendData(mandelList, range0)
-    #sendData0(mandelList)
+    sendData(mandelList)

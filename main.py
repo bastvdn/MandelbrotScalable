@@ -9,13 +9,11 @@ import threading
 from pynput import keyboard
 import pickle
 
+from py2 import maxiter
 
 xmin, xmax = -2.0, 0.5  # x range
-xmin0, xmax0 = -2.0, 0.5
 ymin, ymax = -1.25, 1.25  # y range
-ymin0, ymax0 = -1.25, 1.25
-nx, ny = 1000, 1000  # resolution
-maxiter = 30
+nx, ny = 3000, 3000  # resolution
 all_connections = []
 all_adresses = []
 all_power = []
@@ -39,12 +37,11 @@ def mandelbrot(z):
 def calculate_power_repartition():
     totalSize = ny
     powerList = []
-
     powerSum = sum(all_power)
     lastTrack = 0
 
     for power in all_power:
-        relativeSize = int(power) / powerSum
+        relativeSize = power / powerSum
         part = relativeSize * totalSize
         x = lastTrack
         y = int(lastTrack + part)
@@ -54,36 +51,6 @@ def calculate_power_repartition():
     powerList[-1][1] = totalSize
 
     return powerList
-
-
-def multi(iter=20):
-    start = time.time()
-    maxiter = iter
-
-    X = linspace(xmin, xmax, nx)  # lists of x and y
-    Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-
-    # print(calculate_power_repartition())
-    Yloc = Y[0:1000]
-
-    # main loops
-    p = Pool()
-    Z = [complex(x, y) for y in Y for x in X]
-
-    N = p.map(mandelbrot, Z)
-
-    N = reshape(N, (len(Yloc), ny))  # change to rectangular array
-
-    print("Mandelbrot generation ")
-    print(time.time() - start)
-
-    pyplot.imshow(N)  # plot the image
-
-    pyplot.show()
-
-
-
-
 
 def on_press(key):
     if key == keyboard.Key.esc:
@@ -98,8 +65,6 @@ def on_press(key):
         global connectionPhase
         connectionPhase = False
         return False
-    if k == 'z':
-        print("ok")
 
 
 class ClientThread(threading.Thread):
@@ -114,7 +79,6 @@ class ClientThread(threading.Thread):
         self.pic = b""
         self.im = []
         ClientThread.nb += 1
-        print("New connection added: ", clientAddress, str(self.nb))
 
     def run(self):
         time.sleep(0.1)
@@ -134,41 +98,27 @@ class ClientThread(threading.Thread):
                 lineP = self.csocket.recv(16384)
                 data.append(lineP)
                 data0 += lineP
-                if self.nb == 1:
-                    print("-------------------data2-----------")
-
-                    print(len(lineP))
-                if self.nb == 0:
-                    print("-------------------data1-----------")
-                    print(len(lineP))
 
                 if len(lineP) < 16384:
                     break
 
-            # data = pickle.loads(b"".join(data))
-            # self.pic = data
             data_arr = pickle.loads(data0)
-            data = pickle.loads(b"".join(data))
             self.im = data_arr
             print("all data received")
 
 
 def show_server_list():
-    fullString = ""
-    i = 0
-    while i < len(all_adresses):
-        fullString += colored(
-            'serveur {} addresse: {} port :{} puissance :{}'.format(i, all_adresses[i][0], str(all_adresses[i][1]),
-                                                                    str(all_power[i])), all_color[i],
-            attrs=['reverse']) + '\n'
-        i += 1
-    return fullString
+
+    return '\n'.join([colored(
+        'serveur {} addresse: {} port :{} puissance :{}'.format(i, elem[0], str(elem[1]),
+                                                                str(all_power[i])), all_color[i],
+        attrs=['reverse']) for i, elem in enumerate(all_adresses)])
 
 
 def show_power_repartition():
     powerSum = sum(all_power)
 
-    return ''.join([colored("█" * int((int(power) / powerSum) * 60), all_color[i])
+    return ''.join([colored("█" * int((power / powerSum) * 60), all_color[i])
                     for i, power in enumerate(all_power)])
 
 
@@ -206,13 +156,7 @@ def display_img():
 
 
 if __name__ == '__main__':
-    # Programme : mandelbrot.py
-    # Langage : Python 3.6 - Pygame 1.9
-    # Auteur : Mathieu
-    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
     os.system('color')
-    # multizoom()
-    # multi()
 
     HOST = ''  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
