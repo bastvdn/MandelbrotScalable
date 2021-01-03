@@ -111,14 +111,14 @@ def show_server_list():
 
     return '\n'.join([colored(
         'serveur {} addresse: {} port :{} puissance :{}'.format(i, elem[0], str(elem[1]),
-                                                                str(all_power[i])), all_color[i],
+                                                                str(all_power[i])), all_color[i%len(all_color)],
         attrs=['reverse']) for i, elem in enumerate(all_adresses)])
 
 
 def show_power_repartition():
     powerSum = sum(all_power)
 
-    return ''.join([colored("█" * int((power / powerSum) * 60), all_color[i])
+    return ''.join([colored("█" * int((power / powerSum) * 60), all_color[i%len(all_color)])
                     for i, power in enumerate(all_power)])
 
 

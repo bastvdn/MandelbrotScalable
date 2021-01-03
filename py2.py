@@ -12,7 +12,7 @@ def get_power():
     ratio = 1
 
     if len(sys.argv) > 1:
-        ratio = sys.argv[1]/100
+        ratio = int(sys.argv[1])/100
 
     cpu_frequency = cpu_freq()
 
