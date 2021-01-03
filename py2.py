@@ -77,7 +77,7 @@ if __name__ == '__main__':
     res = s.recv(1024)
     print(res.decode('utf-8'))
 
-    test_send()
+    #test_send()
 
     s.send(str.encode(str(get_power())))
 

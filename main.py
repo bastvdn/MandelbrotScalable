@@ -154,6 +154,20 @@ def display_img():
     print("displaying img ")
     print(time.time() - start)
 
+def test_send():
+    try:
+        c, addr = s.accept()
+        time.sleep(0.5)
+        c.send(b'hello')
+        print('sent')
+        data0 = c.recv(4096)
+        data_arr = pickle.loads(data0)
+        print(data_arr)
+        c.recv(4096)
+    except:
+        pass
+
+
 
 if __name__ == '__main__':
     os.system('color')
@@ -185,23 +199,11 @@ if __name__ == '__main__':
             print(show_power_repartition())
             try:
                 c, addr = s.accept()
-                time.sleep(0.5)
-                c.send(b'hello')
-                print('sent')
-                data0 = c.recv(4096)
-                data_arr = pickle.loads(data0)
-                print(data_arr)
-                c.recv(4096)
-
 
                 newThread = ClientThread(addr, c)
                 newThread.start()
                 all_connections.append(newThread)
                 print('Connected to :', addr[0], ':', addr[1])
-
-
-
-
 
             except socket.timeout as e:
                 if not connectionPhase:
