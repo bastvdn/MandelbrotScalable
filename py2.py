@@ -82,6 +82,8 @@ def sendData(mandelList, range0):
     
     '''
     file = pickle.dumps(mandelList)
+    print(sys.getsizeof(file))
+    time.sleep(1)
     s.send(file)
     print("Data sent ")
     print(time.time() - start)

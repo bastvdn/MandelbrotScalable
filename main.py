@@ -2,7 +2,7 @@ import json
 import timeit
 import pygame
 import time
-from numpy           import linspace, reshape, array, empty, int8
+from numpy           import linspace, reshape, array, empty, int8, concatenate
 from matplotlib      import pyplot
 from multiprocessing import Pool
 import socket
@@ -170,6 +170,7 @@ class ClientThread(threading.Thread):
         self.caddress = clientAddress
         self.nb = ClientThread.nb
         self.pic = b""
+        self.im = []
         ClientThread.nb += 1
         print ("New connection added: ", clientAddress , str(self.nb))
     def run(self):
@@ -193,16 +194,26 @@ class ClientThread(threading.Thread):
                     receptionActive = False
                 self.part.append(line)
             '''
-
+            data = []
+            data0 = b""
             while receptionActive:
-                lineP = self.csocket.recv(8192)
-                self.pic = lineP
-                if len(lineP) < 4096:
-                    break
-            print(self.pic)
+                lineP = self.csocket.recv(16384)
+                data.append(lineP)
+                data0 += lineP
+                if self.nb == 1:
+                    print("-------------------data2-----------")
 
-            #data = pickle.loads(b"".join(data))
-            #self.pic = data
+                    print(len(lineP))
+                if self.nb == 0:
+                    print("-------------------data1-----------")
+                    print(len(lineP))
+
+                if len(lineP) < 16384:
+                    break
+
+            data_arr = pickle.loads(data0)
+            data = pickle.loads(b"".join(data))
+            self.im = data_arr
             print("all data received")
 
 
@@ -301,17 +312,21 @@ def display_img():
 
     :return:
     """
-    start = time.time()
-    pic = b""
-    i = 0
-    data = []
-    for client in all_connections:
-        if client.nb == i:
-            pic += client.pic
-            i+=1
-    print(pic)
 
-    data = pickle.loads(pic)
+
+    start = time.time()
+
+    i = 0
+    data = array([[0 for n in range(1000)]])
+    for client in all_connections:
+        print(i)
+        if client.nb == i:
+            pyplot.imshow(all_connections[i].im)  # plot the image
+
+            pyplot.show()
+            data = concatenate((data,all_connections[i].im), axis=0)
+
+            i+=1
 
     pyplot.imshow(data)  # plot the image
 
