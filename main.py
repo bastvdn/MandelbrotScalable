@@ -101,7 +101,7 @@ class ClientThread(threading.Thread):
                 data.append(lineP)
                 data0 += lineP
 
-                if len(lineP) < 16384:
+                if len(lineP) < 1000:
                     break
 
             data_arr = pickle.loads(data0)
@@ -162,28 +162,30 @@ def test_send():
     time.sleep(0.5)
     c.send(b'hello')
 
-    buff = 16384
-    print(buff)
+    buff = 4096
+    print("buffer size : {}".format(buff))
     data0 = b""
     while True:
         lineP = c.recv(buff)
         print('data size {}'.format(sys.getsizeof(lineP)))
+        lineP2 = c.recv(buff)
+        print('data2 size {}'.format(sys.getsizeof(lineP2)))
         data0 += lineP
 
-        if len(lineP) < buff:
+        if len(lineP) < 1000:
             break
 
 
-    print('total data size {}'.format(sys.getsizeof(data0)))
-    print("all data received")
 
+    print('total data size {}'.format(sys.getsizeof(data0)))
+    data_arr = pickle.loads(lineP)
+    print(len(data_arr))
+    print("all data received")
+    sys.exit()
     #print(data_arr)
     c.recv(4096)
     c.recv(4096)
-    try:
-        time.sleep(100)
-    except KeyboardInterrupt:
-        pass
+    sys.exit()
 
 
 

@@ -54,12 +54,17 @@ def sendData(mandelList):
     print(time.time() - start)
 
 def test_send():
-    dat = [1 for n in range(500*500)]
+    dat = [1 for n in range(1000)]
     file = pickle.dumps(dat)
     print('array lenght : {}'.format(len(dat)))
     print('data size : {}'.format(sys.getsizeof(file)))
     s.send(file)
     print('sent')
+    try:
+        time.sleep(100)
+    except:
+        pass
+    sys.exit()
     s.close()
 
 if __name__ == '__main__':
@@ -81,7 +86,7 @@ if __name__ == '__main__':
     res = s.recv(1024)
     print(res.decode('utf-8'))
 
-    #test_send()
+    test_send()
 
     s.send(str.encode(str(get_power())))
 
