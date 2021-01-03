@@ -82,6 +82,8 @@ def sendData(mandelList, range0):
     
     '''
     file = pickle.dumps(mandelList)
+    print("len file", len(file))
+    print(sys.getsizeof(file))
     s.send(file)
     print("Data sent ")
     print(time.time() - start)
@@ -96,6 +98,7 @@ if __name__ == '__main__':
     # mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
     # sendData(mand)
 
+    #HOST = '91.178.172.194'  # The server's hostname or IP address
     HOST = '127.0.0.1'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
 
@@ -121,6 +124,7 @@ if __name__ == '__main__':
     mandelList = mandel(xmin, xmax, ymin, ymax, nx, ny, maxiter, range0)
     print("sending data")
     sendData(mandelList, range0)
+    print("len mandelist", len(mandelList))
     #sendData0(mandelList)
 
     """

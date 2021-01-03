@@ -2,8 +2,8 @@ import json
 import timeit
 import pygame
 import time
-from numpy           import linspace, reshape, array, empty, int8
-from matplotlib      import pyplot
+from numpy import linspace, reshape, array, empty, int8
+from matplotlib import pyplot
 from multiprocessing import Pool
 import socket
 from termcolor import colored
@@ -14,7 +14,8 @@ from pynput import keyboard
 import pickle
 import sys
 
-def main(iter = 20):
+
+def main(iter=20):
     # Constantes
     MAX_ITERATION = iter  # nombre d'itérations maximales avant de considérer que la suite converge
     XMIN, XMAX, YMIN, YMAX = -2, +0.5, -1.25, +1.25  # bornes du repère
@@ -60,7 +61,9 @@ def main(iter = 20):
 
     pygame.quit()
 
-       # max iterations
+    # max iterations
+
+
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
 nx, ny = 1000, 1000  # resolution
@@ -70,82 +73,66 @@ all_adresses = []
 all_power = []
 connectionPhase = True
 
-
-all_color = ['blue','red','green','yellow']
+all_color = ['blue', 'red', 'green', 'yellow']
 
 print_lock = threading.Lock()
 
 
 def mandelbrot(z):
-    c=z
+    c = z
 
     for n in range(maxiter):
-        if abs(z)>2:
+        if abs(z) > 2:
             return n
-        z=z*z+c
+        z = z * z + c
     return maxiter
 
+
 def calculate_power_repartition():
-
     totalSize = ny
-    powerList= []
-    relativeList = []
+    powerList = []
 
-    i = 0
-    j = 0
-    powerSum = 0
-
-
-    while i < len(all_power):
-
-        powerSum += int(all_power[i])
-        i += 1
-
+    powerSum = sum(all_power)
     lastTrack = 0
 
-    while j < len(all_power):
-
-        relativeSize = int(all_power[j])/powerSum
-        relativeList.append(relativeSize)
-        part = relativeSize*totalSize
-        x=lastTrack
-        y=int(lastTrack+part)
+    for power in all_power:
+        relativeSize = int(power) / powerSum
+        part = relativeSize * totalSize
+        x = lastTrack
+        y = int(lastTrack + part)
         lastTrack = y
-
-        powerList.append([x,y])
-        j += 1
+        powerList.append([x, y])
 
     powerList[-1][1] = totalSize
+
     return powerList
 
 
-def multi(iter = 20):
+def multi(iter=20):
     start = time.time()
     maxiter = iter
 
-    X = linspace(xmin,xmax,nx) # lists of x and y
-    Y = linspace(ymin,ymax,ny) # pixel co-ordinates
+    X = linspace(xmin, xmax, nx)  # lists of x and y
+    Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
 
-    #print(calculate_power_repartition())
+    # print(calculate_power_repartition())
     Yloc = Y[0:1000]
 
     # main loops
     p = Pool()
-    Z = [complex(x,y) for y in Y for x in X]
+    Z = [complex(x, y) for y in Y for x in X]
 
+    N = p.map(mandelbrot, Z)
 
-
-
-    N = p.map(mandelbrot,Z)
-
-    N = reshape(N, (len(Yloc),ny)) # change to rectangular array
+    N = reshape(N, (len(Yloc), ny))  # change to rectangular array
 
     print("Mandelbrot generation ")
     print(time.time() - start)
 
-    pyplot.imshow(N) # plot the image
+    pyplot.imshow(N)  # plot the image
 
     pyplot.show()
+
 
 def on_press(key):
     if key == keyboard.Key.esc:
@@ -161,17 +148,20 @@ def on_press(key):
         connectionPhase = False
         return False
 
+
 class ClientThread(threading.Thread):
     nb = 0
-    img = empty((nx,ny))
-    def __init__(self,clientAddress,clientsocket):
+    img = empty((nx, ny))
+
+    def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.caddress = clientAddress
         self.nb = ClientThread.nb
         self.pic = b""
         ClientThread.nb += 1
-        print ("New connection added: ", clientAddress , str(self.nb))
+        print("New connection added: ", clientAddress, str(self.nb))
+
     def run(self):
         time.sleep(0.1)
         self.csocket.send(str.encode('Server is working:' + str(self.nb)))
@@ -182,7 +172,7 @@ class ClientThread(threading.Thread):
                 break
 
             all_adresses.append(addr)
-            all_power.append(power)
+            all_power.append(int(power))
             receptionActive = True
             '''
             while receptionActive:
@@ -201,25 +191,23 @@ class ClientThread(threading.Thread):
                     break
             print(self.pic)
 
-            #data = pickle.loads(b"".join(data))
-            #self.pic = data
+            # data = pickle.loads(b"".join(data))
+            # self.pic = data
             print("all data received")
 
 
-
-
-
-
-
-
 def show_server_list():
-
     fullString = ""
     i = 0
     while i < len(all_adresses):
-        fullString += colored('serveur {} addresse: {} port :{} puissance :{}'.format(i,all_adresses[i][0],str(all_adresses[i][1]),str(all_power[i])),all_color[i], attrs=['reverse'])  + '\n'
+        fullString += colored(
+            'serveur {} addresse: {} port :{} puissance :{}'.format(i, all_adresses[i][0], str(all_adresses[i][1]),
+                                                                    str(all_power[i])), all_color[i],
+            attrs=['reverse']) + '\n'
         i += 1
     return fullString
+
+
 """
 def threaded(c):
 
@@ -251,35 +239,22 @@ def threaded(c):
 """
 
 
-
-
-
 def show_power_repartition():
-    powericn = "█"
-    powerString = ""
-    i=0
-    j=0
-    powerSum = 0
-    while i < len(all_power):
-        powerSum += int(all_power[i])
-        i +=1
+    powerSum = sum(all_power)
 
-    while j < len(all_power):
-        powerString += colored(powericn*int((int(all_power[j])/powerSum)*60),all_color[j])
-        j +=1
-
-    return powerString
+    return ''.join([colored("█" * int((int(power) / powerSum) * 60), all_color[i])
+                    for i, power in enumerate(all_power)])
 
 
 def send_data_repartition():
     lst = calculate_power_repartition()
-    i=0
+    i = 0
 
     for client in all_connections:
-        data = pickle.dumps([lst[i],[nx,ny],[xmin,xmax],[ymin,ymax],maxiter])
-        #client.csocket.send(data)
+        data = pickle.dumps([lst[i], [nx, ny], [xmin, xmax], [ymin, ymax], maxiter])
+        # client.csocket.send(data)
         client.csocket.send(data)
-        i+=1
+        i += 1
 
     return 0
 
@@ -308,7 +283,7 @@ def display_img():
     for client in all_connections:
         if client.nb == i:
             pic += client.pic
-            i+=1
+            i += 1
     print(pic)
 
     data = pickle.loads(pic)
@@ -320,7 +295,6 @@ def display_img():
     print(time.time() - start)
 
 
-
 if __name__ == '__main__':
     # Programme : mandelbrot.py
     # Langage : Python 3.6 - Pygame 1.9
@@ -328,8 +302,7 @@ if __name__ == '__main__':
     # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
     os.system('color')
 
-    #multi()
-
+    # multi()
 
     HOST = ''  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
@@ -359,7 +332,6 @@ if __name__ == '__main__':
             try:
                 c, addr = s.accept()
 
-
                 newThread = ClientThread(addr, c)
                 newThread.start()
                 all_connections.append(newThread)
@@ -379,15 +351,11 @@ if __name__ == '__main__':
 
         display_img()
 
-
         s.close()
         print('end')
-        
+
     except KeyboardInterrupt:
         pass
-
-
-
 
     """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -406,11 +374,6 @@ if __name__ == '__main__':
                     powerData = conn.recv(1024)
                     os.system('cls')
                     print(show_server_list())"""
-
-
-
-
-
 
     """
         s.listen()
@@ -436,12 +399,7 @@ if __name__ == '__main__':
             except KeyboardInterrupt:
                 print("Key Interruption")"""
 
-
-
-
-
-
-#branch
+# branch
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
