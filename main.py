@@ -2,6 +2,8 @@ import json
 import timeit
 import pygame
 import time
+from numpy import linspace, reshape, array, empty, int8
+from matplotlib import pyplot
 from numpy           import linspace, reshape, array, empty, int8, concatenate
 from matplotlib      import pyplot
 from multiprocessing import Pool
@@ -14,53 +16,6 @@ from pynput import keyboard
 import pickle
 import sys
 
-def main(iter = 20):
-    # Constantes
-    MAX_ITERATION = iter  # nombre d'itérations maximales avant de considérer que la suite converge
-    XMIN, XMAX, YMIN, YMAX = -2, +0.5, -1.25, +1.25  # bornes du repère
-    LARGEUR, HAUTEUR = 1000, 1000  # taille de la fenêtre en pixels
-    # Initialisation et création d'une fenêtre aux dimensions spécifiéés munie d'un titre
-    pygame.init()
-    screen = pygame.display.set_mode((LARGEUR, HAUTEUR))
-    pygame.display.set_caption("Fractale de Mandelbrot")
-    # Création de l'ensemble de Mandelbrot
-    # Principe : on balaye l'écran pixel par pixel en convertissant le pixel en un point du plan de notre repère
-    # Si la suite converge, le point appartient à l'ensemble de Mandelbrot et on colore le pixel en noir
-    # Sinon la suite diverge, le point n'appartient pas à l'ensemble et on colore le pixel en blanc
-    for y in range(HAUTEUR):
-        for x in range(LARGEUR):
-            # Les deux lignes suivantes permettent d'associer à chaque pixel de l'écran de coordonnées (x;y)
-            # un point C du plan de coordonnées (cx;cy) dans le repère défini par XMIN:XMAX et YMIN:YMAX
-            cx = (x * (XMAX - XMIN) / LARGEUR + XMIN)
-            cy = (y * (YMIN - YMAX) / HAUTEUR + YMAX)
-            xn = 0
-            yn = 0
-            n = 0
-            while (
-                    xn * xn + yn * yn) < 4 and n < MAX_ITERATION:  # on teste que le carré de la distance est inférieur à 4 -> permet d'économiser un calcul de racine carrée coûteux en terme de performances
-                # Calcul des coordonnes de Mn
-                tmp_x = xn
-                tmp_y = yn
-                xn = tmp_x * tmp_x - tmp_y * tmp_y + cx
-                yn = 2 * tmp_x * tmp_y + cy
-                n = n + 1
-            if n == MAX_ITERATION:
-                screen.set_at((x, y), (0, 0, 0))  # On colore le pixel en noir -> code RGB : (0,0,0)
-            else:
-                screen.set_at((x, y), (255, 255, 255))  # On colore le pixel en blanc -> code RGB : (255,255,255)
-    pygame.display.flip()  # Mise à jour et rafraîchissement de la fenêtre graphique pour affichage
-    print("--- Temps de recherche : %s secondes---" % (time.time() - start_time))
-    # Boucle infinie permettant d'afficher à l'écran la fenêtre graphique
-    # Sans ça, la fenêtre apparaît et disparaît aussitôt
-    loop = True
-    while loop:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:  # Pour quitter l'application en fermant la fenêtre
-                loop = False
-
-    pygame.quit()
-
-       # max iterations
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
 nx, ny = 1000, 1000  # resolution
@@ -70,82 +25,66 @@ all_adresses = []
 all_power = []
 connectionPhase = True
 
-
-all_color = ['blue','red','green','yellow']
+all_color = ['blue', 'red', 'green', 'yellow']
 
 print_lock = threading.Lock()
 
 
 def mandelbrot(z):
-    c=z
+    c = z
 
     for n in range(maxiter):
-        if abs(z)>2:
+        if abs(z) > 2:
             return n
-        z=z*z+c
+        z = z * z + c
     return maxiter
 
+
 def calculate_power_repartition():
-
     totalSize = ny
-    powerList= []
-    relativeList = []
+    powerList = []
 
-    i = 0
-    j = 0
-    powerSum = 0
-
-
-    while i < len(all_power):
-
-        powerSum += int(all_power[i])
-        i += 1
-
+    powerSum = sum(all_power)
     lastTrack = 0
 
-    while j < len(all_power):
-
-        relativeSize = int(all_power[j])/powerSum
-        relativeList.append(relativeSize)
-        part = relativeSize*totalSize
-        x=lastTrack
-        y=int(lastTrack+part)
+    for power in all_power:
+        relativeSize = int(power) / powerSum
+        part = relativeSize * totalSize
+        x = lastTrack
+        y = int(lastTrack + part)
         lastTrack = y
-
-        powerList.append([x,y])
-        j += 1
+        powerList.append([x, y])
 
     powerList[-1][1] = totalSize
+
     return powerList
 
 
-def multi(iter = 20):
+def multi(iter=20):
     start = time.time()
     maxiter = iter
 
-    X = linspace(xmin,xmax,nx) # lists of x and y
-    Y = linspace(ymin,ymax,ny) # pixel co-ordinates
+    X = linspace(xmin, xmax, nx)  # lists of x and y
+    Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
 
-    #print(calculate_power_repartition())
+    # print(calculate_power_repartition())
     Yloc = Y[0:1000]
 
     # main loops
     p = Pool()
-    Z = [complex(x,y) for y in Y for x in X]
+    Z = [complex(x, y) for y in Y for x in X]
 
+    N = p.map(mandelbrot, Z)
 
-
-
-    N = p.map(mandelbrot,Z)
-
-    N = reshape(N, (len(Yloc),ny)) # change to rectangular array
+    N = reshape(N, (len(Yloc), ny))  # change to rectangular array
 
     print("Mandelbrot generation ")
     print(time.time() - start)
 
-    pyplot.imshow(N) # plot the image
+    pyplot.imshow(N)  # plot the image
 
     pyplot.show()
+
 
 def on_press(key):
     if key == keyboard.Key.esc:
@@ -161,10 +100,12 @@ def on_press(key):
         connectionPhase = False
         return False
 
+
 class ClientThread(threading.Thread):
     nb = 0
-    img = empty((nx,ny))
-    def __init__(self,clientAddress,clientsocket):
+    img = empty((nx, ny))
+
+    def __init__(self, clientAddress, clientsocket):
         threading.Thread.__init__(self)
         self.csocket = clientsocket
         self.caddress = clientAddress
@@ -172,7 +113,8 @@ class ClientThread(threading.Thread):
         self.pic = b""
         self.im = []
         ClientThread.nb += 1
-        print ("New connection added: ", clientAddress , str(self.nb))
+        print("New connection added: ", clientAddress, str(self.nb))
+
     def run(self):
         time.sleep(0.1)
         self.csocket.send(str.encode('Server is working:' + str(self.nb)))
@@ -183,7 +125,7 @@ class ClientThread(threading.Thread):
                 break
 
             all_adresses.append(addr)
-            all_power.append(power)
+            all_power.append(int(power))
             receptionActive = True
             '''
             while receptionActive:
@@ -197,7 +139,7 @@ class ClientThread(threading.Thread):
             data = []
             data0 = b""
             while receptionActive:
-                lineP = self.csocket.recv(8162)
+                lineP = self.csocket.recv(16384)
                 data.append(lineP)
                 data0 += lineP
                 if self.nb == 1:
@@ -208,29 +150,29 @@ class ClientThread(threading.Thread):
                     print("-------------------data1-----------")
                     print(len(lineP))
 
-                if len(lineP) < 8162:
+                if len(lineP) < 16384:
                     break
 
+            # data = pickle.loads(b"".join(data))
+            # self.pic = data
             data_arr = pickle.loads(data0)
             data = pickle.loads(b"".join(data))
             self.im = data_arr
             print("all data received")
 
 
-
-
-
-
-
-
 def show_server_list():
-
     fullString = ""
     i = 0
     while i < len(all_adresses):
-        fullString += colored('serveur {} addresse: {} port :{} puissance :{}'.format(i,all_adresses[i][0],str(all_adresses[i][1]),str(all_power[i])),all_color[i], attrs=['reverse'])  + '\n'
+        fullString += colored(
+            'serveur {} addresse: {} port :{} puissance :{}'.format(i, all_adresses[i][0], str(all_adresses[i][1]),
+                                                                    str(all_power[i])), all_color[i],
+            attrs=['reverse']) + '\n'
         i += 1
     return fullString
+
+
 """
 def threaded(c):
 
@@ -262,35 +204,20 @@ def threaded(c):
 """
 
 
-
-
-
 def show_power_repartition():
-    powericn = "█"
-    powerString = ""
-    i=0
-    j=0
-    powerSum = 0
-    while i < len(all_power):
-        powerSum += int(all_power[i])
-        i +=1
+    powerSum = sum(all_power)
 
-    while j < len(all_power):
-        powerString += colored(powericn*int((int(all_power[j])/powerSum)*60),all_color[j])
-        j +=1
-
-    return powerString
+    return ''.join([colored("█" * int((int(power) / powerSum) * 60), all_color[i])
+                    for i, power in enumerate(all_power)])
 
 
 def send_data_repartition():
     lst = calculate_power_repartition()
-    i=0
 
-    for client in all_connections:
-        data = pickle.dumps([lst[i],[nx,ny],[xmin,xmax],[ymin,ymax],maxiter])
-        #client.csocket.send(data)
+    for i, client in enumerate(all_connections):
+        data = pickle.dumps([lst[i], [nx, ny], [xmin, xmax], [ymin, ymax], maxiter])
+        # client.csocket.send(data)
         client.csocket.send(data)
-        i+=1
 
     return 0
 
@@ -315,12 +242,20 @@ def display_img():
 
 
     start = time.time()
+    pic = b""
+
+    for i, client in enumerate(all_connections):
 
     i = 0
     data = array([[0 for n in range(1000)]])
     for client in all_connections:
         print(i)
         if client.nb == i:
+            pic += client.pic
+
+    print(pic)
+
+    data = pickle.loads(pic)
             pyplot.imshow(all_connections[i].im)  # plot the image
 
             pyplot.show()
@@ -335,7 +270,6 @@ def display_img():
     print(time.time() - start)
 
 
-
 if __name__ == '__main__':
     # Programme : mandelbrot.py
     # Langage : Python 3.6 - Pygame 1.9
@@ -343,10 +277,9 @@ if __name__ == '__main__':
     # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
     os.system('color')
 
-    #multi()
+    # multi()
 
-
-    HOST = '0.0.0.0'  # Standard loopback interface address (localhost)
+    HOST = ''  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
     listener = keyboard.Listener(on_press=on_press)
@@ -374,7 +307,6 @@ if __name__ == '__main__':
             try:
                 c, addr = s.accept()
 
-
                 newThread = ClientThread(addr, c)
                 newThread.start()
                 all_connections.append(newThread)
@@ -394,15 +326,11 @@ if __name__ == '__main__':
 
         display_img()
 
-
         s.close()
         print('end')
-        
+
     except KeyboardInterrupt:
         pass
-
-
-
 
     """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -421,11 +349,6 @@ if __name__ == '__main__':
                     powerData = conn.recv(1024)
                     os.system('cls')
                     print(show_server_list())"""
-
-
-
-
-
 
     """
         s.listen()
@@ -451,12 +374,7 @@ if __name__ == '__main__':
             except KeyboardInterrupt:
                 print("Key Interruption")"""
 
-
-
-
-
-
-#branch
+# branch
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
