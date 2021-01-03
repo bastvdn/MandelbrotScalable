@@ -1,24 +1,17 @@
-import json
-import timeit
-import pygame
 import time
-from numpy import linspace, reshape, array, empty, int8
-from matplotlib import pyplot
-from numpy import linspace, reshape, array, empty, int8, concatenate
+from numpy import linspace, reshape, array, empty, concatenate
 from matplotlib import pyplot
 from multiprocessing import Pool
 import socket
 from termcolor import colored
 import os
-from _thread import *
 import threading
 from pynput import keyboard
 import pickle
-import sys
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
-nx, ny = 1000, 1000  # resolution
+nx, ny = 10000, 10000  # resolution
 maxiter = 1000
 all_connections = []
 all_adresses = []
@@ -127,15 +120,6 @@ class ClientThread(threading.Thread):
             all_adresses.append(addr)
             all_power.append(int(power))
             receptionActive = True
-            '''
-            while receptionActive:
-                lineP = self.csocket.recv(16384)
-                
-                line = pickle.loads(lineP)
-                if len(line) == 0:
-                    receptionActive = False
-                self.part.append(line)
-            '''
             data = []
             data0 = b""
             while receptionActive:
@@ -173,37 +157,6 @@ def show_server_list():
     return fullString
 
 
-"""
-def threaded(c):
-
-    c.send(str.encode('Server is working:'))
-    while True:
-        power = c.recv(1024)
-        if not power:
-            print('Bye')
-
-            # lock released on exit
-            print_lock.release()
-            break
-
-        resp = power.decode('utf-8')
-        all_power.append(resp)
-
-        res = input('waiting')
-        c.sendall(str.encode(res))
-
-    # all_power.append(data)
-    # reverse the given string from client
-    # print(all_power)
-    # print(show_server_list())
-
-    # send back reversed string to client
-
-    # connection closed
-    c.close()
-"""
-
-
 def show_power_repartition():
     powerSum = sum(all_power)
 
@@ -223,23 +176,6 @@ def send_data_repartition():
 
 
 def display_img():
-    """
-    start = time.time()
-
-    for client in all_connections:
-        N = client.part
-
-    print("displaying img ")
-    print(time.time() - start)
-
-    print(N[0])
-    pyplot.imshow(N)  # plot the image
-
-    pyplot.show()
-
-    :return:
-    """
-
     start = time.time()
     pic = b""
 
@@ -323,49 +259,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
 
-    """
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind((HOST, PORT))
-                print("Lancement du serveur")
-                finish = False
-
-                while not finish:
-
-                    s.listen()
-                    conn, addr = s.accept()
-                    s.setblocking(True)
-
-                    all_connections.append(conn)
-                    all_adresses.append(addr)
-                    powerData = conn.recv(1024)
-                    os.system('cls')
-                    print(show_server_list())"""
-
-    """
-        s.listen()
-        conn, addr = s.accept()
-        with conn:
-            time.sleep(1)
-            print('connection à', addr)
-            start_time = time.time()
-            try:
-
-                print("Démarrage de MandelBrot")
-                conn.sendall(b'ok')
-                print("en attente des instruction du client")
-                data = conn.recv(1024)
-
-                print("nombre d'itérations [client]: " + str(int(data)))
-                start_time = time.time()
-                multi(int(data))
-
-                print(maxiter)
-                time.sleep(2)
-                #conn.sendall(data)
-            except KeyboardInterrupt:
-                print("Key Interruption")"""
-
 # branch
-
-
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

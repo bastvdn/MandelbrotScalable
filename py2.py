@@ -10,6 +10,7 @@ import requests
 from psutil import cpu_count, cpu_freq
 
 
+
 maxiter = 30
 
 
@@ -64,23 +65,6 @@ def sendData0(mandelList):
 def sendData(mandelList, range0):
     i = 0
     start = time.time()
-    '''
-    rangeTot = range0[1] - range0[0]
-    for line in mandelList:
-        if i == rangeTot - 1:
-            linePickle = pickle.dumps([])
-            s.send(linePickle)
-            break
-
-
-        linePickle = pickle.dumps(line)
-        s.send(linePickle)
-        time.sleep(0.001)
-
-        i += 1
-    print(mandelList[0])
-    
-    '''
     file = pickle.dumps(mandelList)
     s.send(file)
     print("Data sent ")
@@ -122,10 +106,3 @@ if __name__ == '__main__':
     print("sending data")
     sendData(mandelList, range0)
     #sendData0(mandelList)
-
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b'Hello, world')
-        data = s.recv(1024)
-    """
