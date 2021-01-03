@@ -52,6 +52,11 @@ def sendData(mandelList):
     print("Data sent ")
     print(time.time() - start)
 
+def test_send():
+    file = pickle.dumps([1 for n in range(100)])
+    s.send(file)
+    print('sent')
+    s.close()
 
 if __name__ == '__main__':
     # Programme : mandelbrot.py
@@ -71,6 +76,8 @@ if __name__ == '__main__':
 
     res = s.recv(1024)
     print(res.decode('utf-8'))
+
+    test_send()
 
     s.send(str.encode(str(get_power())))
 

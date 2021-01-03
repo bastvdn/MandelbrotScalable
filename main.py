@@ -137,7 +137,7 @@ def display_img():
     start = time.time()
     pic = b""
 
-    data = array([[0 for n in range(1000)]])
+    data = array([[0 for n in range(nx)]])
 
     for i, client in enumerate(all_connections):
         if client.nb == i:
@@ -185,11 +185,23 @@ if __name__ == '__main__':
             print(show_power_repartition())
             try:
                 c, addr = s.accept()
+                time.sleep(0.5)
+                c.send(b'hello')
+                print('sent')
+                data0 = c.recv(4096)
+                data_arr = pickle.loads(data0)
+                print(data_arr)
+                c.recv(4096)
+
 
                 newThread = ClientThread(addr, c)
                 newThread.start()
                 all_connections.append(newThread)
                 print('Connected to :', addr[0], ':', addr[1])
+
+
+
+
 
             except socket.timeout as e:
                 if not connectionPhase:
