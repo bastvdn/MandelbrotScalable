@@ -62,26 +62,11 @@ def sendData0(mandelList):
 
 
 def sendData(mandelList, range0):
-    i = 0
+
     start = time.time()
-    '''
-    rangeTot = range0[1] - range0[0]
-    for line in mandelList:
-        if i == rangeTot - 1:
-            linePickle = pickle.dumps([])
-            s.send(linePickle)
-            break
-
-
-        linePickle = pickle.dumps(line)
-        s.send(linePickle)
-        time.sleep(0.001)
-
-        i += 1
-    print(mandelList[0])
-    
-    '''
     file = pickle.dumps(mandelList)
+    print(sys.getsizeof(file))
+    time.sleep(1)
     s.send(file)
     print("Data sent ")
     print(time.time() - start)
