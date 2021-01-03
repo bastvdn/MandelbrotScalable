@@ -74,13 +74,7 @@ def sendData(mandelList, range0):
 
 
 if __name__ == '__main__':
-    # Programme : mandelbrot.py
-    # Langage : Python 3.6 - Pygame 1.9
-    # Auteur : Mathieu
-    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
 
-    # mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
-    # sendData(mand)
 
     HOST = '127.0.0.1'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server

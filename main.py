@@ -8,7 +8,7 @@ import os
 import threading
 from pynput import keyboard
 import pickle
-import keyboard
+
 
 xmin, xmax = -2.0, 0.5  # x range
 xmin0, xmax0 = -2.0, 0.5
@@ -83,6 +83,8 @@ def multi(iter=20):
 
 
 
+
+
 def on_press(key):
     if key == keyboard.Key.esc:
         return False  # stop listener
@@ -98,36 +100,6 @@ def on_press(key):
         return False
     if k == 'z':
         print("ok")
-
-class ClientThread0(threading.Thread):
-
-    def __init__(self,xminLoc,xmaxLoc,yminLoc,ymaxLoc,nxLoc,nyLoc):
-        threading.Thread.__init__(self)
-        ClientThread.nb += 1
-        print("New connection added:")
-
-    def run(self):
-        start = time.time()
-
-
-        X = linspace(xmin, xmax, nx)  # lists of x and y
-        Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-
-        # print(calculate_power_repartition())
-        Yloc = Y[0:1000]
-
-        # main loops
-        p = Pool()
-        Z = [complex(x, y) for y in Y for x in X]
-
-        N = p.map(mandelbrot, Z)
-
-        N = reshape(N, (len(Yloc), ny))  # change to rectangular array
-
-        print("Mandelbrot generation ")
-        print(time.time() - start)
-
-        pyplot.imshow(N)
 
 
 class ClientThread(threading.Thread):
@@ -247,7 +219,7 @@ if __name__ == '__main__':
 
     listener = keyboard.Listener(on_press=on_press)
     listener.start()  # start to listen on a separate thread
-    multi()
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2)
 
