@@ -48,12 +48,16 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
 def sendData(mandelList):
     start = time.time()
     file = pickle.dumps(mandelList)
+    print('data size : {}'.format(sys.getsizeof(file)))
     s.send(file)
     print("Data sent ")
     print(time.time() - start)
 
 def test_send():
-    file = pickle.dumps([1 for n in range(100)])
+    dat = [1 for n in range(500*500)]
+    file = pickle.dumps(dat)
+    print('array lenght : {}'.format(len(dat)))
+    print('data size : {}'.format(sys.getsizeof(file)))
     s.send(file)
     print('sent')
     s.close()

@@ -8,12 +8,13 @@ import os
 import threading
 from pynput import keyboard
 import pickle
+import sys
 
 from py2 import maxiter
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
-nx, ny = 3000, 3000  # resolution
+nx, ny = 1000, 1000  # resolution
 all_connections = []
 all_adresses = []
 all_power = []
@@ -96,6 +97,7 @@ class ClientThread(threading.Thread):
             data0 = b""
             while receptionActive:
                 lineP = self.csocket.recv(16384)
+                print('data size {}'.format(sys.getsizeof(lineP)))
                 data.append(lineP)
                 data0 += lineP
 
@@ -155,17 +157,35 @@ def display_img():
     print(time.time() - start)
 
 def test_send():
+
+    c, addr = s.accept()
+    time.sleep(0.5)
+    c.send(b'hello')
+
+    buff = 16384
+    print(buff)
+    data0 = b""
+    while True:
+        lineP = c.recv(buff)
+        print('data size {}'.format(sys.getsizeof(lineP)))
+        data0 += lineP
+
+        if len(lineP) < buff:
+            break
+
+
+    print('total data size {}'.format(sys.getsizeof(data0)))
+    print("all data received")
+
+    #print(data_arr)
+    c.recv(4096)
+    c.recv(4096)
     try:
-        c, addr = s.accept()
-        time.sleep(0.5)
-        c.send(b'hello')
-        print('sent')
-        data0 = c.recv(4096)
-        data_arr = pickle.loads(data0)
-        print(data_arr)
-        c.recv(4096)
-    except:
+        time.sleep(100)
+    except KeyboardInterrupt:
         pass
+
+
 
 
 
@@ -179,7 +199,7 @@ if __name__ == '__main__':
     listener.start()  # start to listen on a separate thread
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(2)
+    s.settimeout(4)
 
     try:
         s.bind((HOST, PORT))
@@ -189,7 +209,10 @@ if __name__ == '__main__':
 
     try:
         while connectionPhase:
+
             s.listen(5)
+            #test_send()
+            #print("test ended")
             # establish connection with client
 
             os.system('cls')
