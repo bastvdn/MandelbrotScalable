@@ -10,6 +10,7 @@ import requests
 from psutil import cpu_count, cpu_freq
 
 
+
 maxiter = 30
 
 
@@ -107,10 +108,3 @@ if __name__ == '__main__':
     print("sending data")
     sendData(mandelList, range0)
     #sendData0(mandelList)
-
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
-        s.sendall(b'Hello, world')
-        data = s.recv(1024)
-    """
