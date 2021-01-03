@@ -244,24 +244,20 @@ def display_img():
     start = time.time()
     pic = b""
 
-    for i, client in enumerate(all_connections):
-
-    i = 0
     data = array([[0 for n in range(1000)]])
-    for client in all_connections:
-        print(i)
+
+    for i, client in enumerate(all_connections):
         if client.nb == i:
             pic += client.pic
 
     print(pic)
 
     data = pickle.loads(pic)
-            pyplot.imshow(all_connections[i].im)  # plot the image
+    pyplot.imshow(all_connections[i].im)  # plot the image
 
-            pyplot.show()
-            data = concatenate((data,all_connections[i].im), axis=0)
+    pyplot.show()
+    data = concatenate((data,all_connections[i].im), axis=0)
 
-            i+=1
 
     pyplot.imshow(data)  # plot the image
 
