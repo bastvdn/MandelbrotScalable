@@ -33,7 +33,6 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
     start = time.time()
     X = linspace(xmin, xmax, nx)  # lists of x and y
     Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-    print(part[0])
     Yloc = Y[part[0]:part[1] + 1]
 
     # main loops

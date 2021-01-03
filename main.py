@@ -13,7 +13,7 @@ from py2 import maxiter
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
-nx, ny = 1000, 1000  # resolution
+nx, ny = 3000, 3000  # resolution
 all_connections = []
 all_adresses = []
 all_power = []
@@ -51,33 +51,6 @@ def calculate_power_repartition():
     powerList[-1][1] = totalSize
 
     return powerList
-
-
-def multi(iter=20):
-    start = time.time()
-    maxiter = iter
-
-    X = linspace(xmin, xmax, nx)  # lists of x and y
-    Y = linspace(ymin, ymax, ny)  # pixel co-ordinates
-
-    # print(calculate_power_repartition())
-    Yloc = Y[0:1000]
-
-    # main loops
-    p = Pool()
-    Z = [complex(x, y) for y in Y for x in X]
-
-    N = p.map(mandelbrot, Z)
-
-    N = reshape(N, (len(Yloc), ny))  # change to rectangular array
-
-    print("Mandelbrot generation ")
-    print(time.time() - start)
-
-    pyplot.imshow(N)  # plot the image
-
-    pyplot.show()
-
 
 def on_press(key):
     if key == keyboard.Key.esc:
@@ -183,13 +156,7 @@ def display_img():
 
 
 if __name__ == '__main__':
-    # Programme : mandelbrot.py
-    # Langage : Python 3.6 - Pygame 1.9
-    # Auteur : Mathieu
-    # Description : Calcule et affiche la fractale de Mandelbrot en noir et blanc
     os.system('color')
-
-    # multi()
 
     HOST = ''  # Standard loopback interface address (localhost)
     PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
