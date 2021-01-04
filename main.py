@@ -14,11 +14,12 @@ from py2 import maxiter
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
-nx, ny = 1000, 1000  # resolution
+nx, ny = 4000, 4000  # resolution
 all_connections = []
 all_adresses = []
 all_power = []
 connectionPhase = True
+allReceived = False
 
 all_color = ['blue', 'red', 'green', 'yellow']
 
@@ -84,8 +85,11 @@ class ClientThread(threading.Thread):
     def run(self):
         time.sleep(0.1)
         self.csocket.send(str.encode('Server is working:' + str(self.nb)))
+
         while True:
+
             power = self.csocket.recv(8192)
+
             if not power:
                 print('Bye')
                 break
@@ -93,20 +97,26 @@ class ClientThread(threading.Thread):
             all_adresses.append(addr)
             all_power.append(int(power))
             receptionActive = True
-            data = []
-            data0 = b""
-            while receptionActive:
-                lineP = self.csocket.recv(16384)
-                print('data size {}'.format(sys.getsizeof(lineP)))
-                data.append(lineP)
-                data0 += lineP
 
-                if len(lineP) < 1000:
+            data = b""
+            bufferSize= 1048576
+
+            while receptionActive:
+                #print("received on : {}".format(self.nb))
+                lineP = self.csocket.recv(bufferSize)
+                #print(len(lineP))
+                data += lineP
+
+
+
+                if lineP == b'':
+                    print("all data received")
                     break
 
-            data_arr = pickle.loads(data0)
+
+            data_arr = pickle.loads(data)
             self.im = data_arr
-            print("all data received")
+
 
 
 def show_server_list():
@@ -115,6 +125,14 @@ def show_server_list():
         'serveur {} addresse: {} port :{} puissance :{}'.format(i, elem[0], str(elem[1]),
                                                                 str(all_power[i])), all_color[i%len(all_color)],
         attrs=['reverse']) for i, elem in enumerate(all_adresses)])
+
+def check_data_received():
+    allEnd = True
+
+    for client in all_connections:
+        if len(client.im) == 0:
+            allEnd = False
+    return allEnd
 
 
 def show_power_repartition():
@@ -125,6 +143,7 @@ def show_power_repartition():
 
 
 def send_data_repartition():
+
     lst = calculate_power_repartition()
 
     for i, client in enumerate(all_connections):
@@ -203,11 +222,15 @@ if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(4)
 
+    startTimer = time.time()
+
     try:
         s.bind((HOST, PORT))
     except socket.error as e:
         print(str(e))
     print("Lancement du serveur")
+
+
 
     try:
         while connectionPhase:
@@ -238,7 +261,15 @@ if __name__ == '__main__':
             # Start a new thread and return its identifier
 
         input("sending data repartition ?")
+
+        startTimer = time.time()
         send_data_repartition()
+
+
+        while not check_data_received():
+            time.sleep(0.01)
+
+        print("data received in {}".format(time.time() - startTimer))
 
         input()
 

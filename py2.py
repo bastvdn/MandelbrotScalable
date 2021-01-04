@@ -48,6 +48,7 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
 def sendData(mandelList):
     start = time.time()
     file = pickle.dumps(mandelList)
+    file += b''
     print('data size : {}'.format(sys.getsizeof(file)))
     s.send(file)
     print("Data sent ")
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     res = s.recv(1024)
     print(res.decode('utf-8'))
 
-    test_send()
+    #test_send()
 
     s.send(str.encode(str(get_power())))
 
