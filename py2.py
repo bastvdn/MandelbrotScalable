@@ -8,15 +8,16 @@ from psutil import cpu_count, cpu_freq
 
 maxiter = 30
 
+
 def get_power():
     ratio = 1
 
     if len(sys.argv) > 1:
-        ratio = int(sys.argv[1])/100
+        ratio = int(sys.argv[1]) / 100
 
     cpu_frequency = cpu_freq()
 
-    return int(cpu_count() * ratio * cpu_frequency.max/1000)
+    return int(cpu_count() * ratio * cpu_frequency.max / 1000)
 
 
 def mandelbrot(z):
@@ -36,14 +37,20 @@ def mandel(xmin, xmax, ymin, ymax, nx, ny, part):
     Yloc = Y[part[0]:part[1] + 1]
 
     # main loops
-    p = Pool()
+    if len(sys.argv) > 1:
+        if int(sys.argv[1]) < 100:
+            p = Pool(int(cpu_count() * sys.argv[1] / 100))
+    else:
+        p = Pool()
+
     Z = [complex(x, y) for y in Yloc for x in X]
     N = p.map(mandelbrot, Z)
 
     N = reshape(N, (len(Yloc), nx))  # change to rectangular array
     print("Mandelbrot generation " + str(part[0]) + "to" + str(part[1]))
-    print(time.time()-start)
+    print(time.time() - start)
     return N
+
 
 def sendData(mandelList):
     start = time.time()
@@ -53,6 +60,7 @@ def sendData(mandelList):
     s.send(file)
     print("Data sent ")
     print(time.time() - start)
+
 
 def test_send():
     dat = [1 for n in range(1000)]
@@ -67,6 +75,7 @@ def test_send():
         pass
     sys.exit()
     s.close()
+
 
 if __name__ == '__main__':
     # Programme : mandelbrot.py
