@@ -10,7 +10,7 @@ from pynput import keyboard
 import pickle
 import sys
 
-from py2 import maxiter
+from client import maxiter
 
 xmin, xmax = -2.0, 0.5  # x range
 ymin, ymax = -1.25, 1.25  # y range
