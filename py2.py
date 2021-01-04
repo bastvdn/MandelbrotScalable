@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # mand = mandel(-2.0, 0.5,-1.25, 1.25,1000, 1000,20,[600,1000])
     # sendData(mand)
 
-    HOST = '127.0.0.1'  # The server's hostname or IP address
+    HOST = '91.178.172.194'  # The server's hostname or IP address
     PORT = 65432  # The port used by the server
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -87,7 +87,8 @@ if __name__ == '__main__':
     res = s.recv(1024)
     print(res.decode('utf-8'))
 
-    #test_send()
+    # test_send()
+    # test_send()
 
     s.send(str.encode(str(get_power())))
 

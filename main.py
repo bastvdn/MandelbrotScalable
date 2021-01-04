@@ -107,8 +107,6 @@ class ClientThread(threading.Thread):
                 #print(len(lineP))
                 data += lineP
 
-
-
                 if lineP == b'':
                     print("all data received")
                     break
